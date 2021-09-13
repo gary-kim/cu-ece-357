@@ -9,14 +9,21 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <libgen.h>
 
-static char buf[4097];
+static char buf[4096];
+const char* help_message = " - concatenate and copy files\n"
+  "\n"
+  "USAGE:\n"
+  "\tkitty [-o outfile] infile1 [...infile2...]\n"
+  "\tkitty [-o outfile]\n";
 
 int main(int argc, char** argv) {
   int outputfd = 1;
   int total = 0;
   int c;
-  while ((c = getopt(argc, argv, "o:")) != -1) {
+  int help = 0;
+  while ((c = getopt(argc, argv, "o:h")) != -1) {
     switch (c) {
       case 'o':
         if (strcmp("-", optarg) == 0) {
@@ -31,6 +38,9 @@ int main(int argc, char** argv) {
           return -1;
         }
         break;
+      case 'h':
+        help = 1;
+        break;
       case '?':
         if (optopt == 'o') {
           fprintf(stderr, "-o requires an argument\n");
@@ -44,6 +54,21 @@ int main(int argc, char** argv) {
         break;
     }
   }
+  if (help || argc == 1) {
+    char *progname = basename(argv[0]);
+    int err = write_helper(1, progname, strlen(progname));
+    if (err != 0) {
+      fprintf(stderr, "Error while attempting to print help message. errno = %i\n", err);
+      return -1;
+    }
+    err = write_helper(1, help_message, strlen(help_message));
+    if (err != 0) {
+      fprintf(stderr, "Error while attempting to print help message. errno = %i\n", err);
+      return -1;
+    }
+    return 0;
+  }
+
   if (optind == argc && (total = op(0, outputfd, "stdin")) < 0) {
     return -1;
   }
@@ -68,7 +93,11 @@ int main(int argc, char** argv) {
     total += done;
   }
   int len = sprintf(buf, "%i\n", total);
-  write_helper(2, buf, len);
+  int err = write_helper(2, buf, len);
+  if (err != 0) {
+    // This is dumb. If writing to stderr with the kernel call does not work, there is no way the stdlib call will work.
+    fprintf(stderr, "Error while attempting to print total characters written to stderr. errno = %i\n", err);
+  }
   return 0;
 }
 
