@@ -1,4 +1,4 @@
-#include "program.h"
+#include "kitty.h"
 
 #include <ctype.h>
 #include <errno.h>
