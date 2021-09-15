@@ -1,0 +1,44 @@
+kgary@s76l:~/tmp/git/cu-ece-357/hw/hw1p1\[?2004h[gary@s76l hw1p1]$ [K[gary@s76l hw1p1]$ make
+[?2004lgcc -o kitty -std=c99 kitty.h kitty.c
+kgary@s76l:~/tmp/git/cu-ece-357/hw/hw1p1\[?2004h[gary@s76l hw1p1]$ ./kitty nonexsistentfile.txt
+[?2004lError while attempting to open input file "nonexsistentfile.txt". errno = 2
+kgary@s76l:~/tmp/git/cu-ece-357/hw/hw1p1\[?2004h[gary@s76l hw1p1]$ ./kitty -h
+[?2004lkitty - concatenate and copy files
+
+USAGE:
+        kitty [-o outfile] infile1 [...infile2...]
+        kitty [-o outfile]
+kgary@s76l:~/tmp/git/cu-ece-357/hw/hw1p1\[?2004h[gary@s76l hw1p1]$ cat /dev/urandom > file1
+[?2004l^C
+kgary@s76l:~/tmp/git/cu-ece-357/hw/hw1p1\[?2004h[gary@s76l hw1p1]$ cat /dev/urandom > file2
+[?2004l^C
+kgary@s76l:~/tmp/git/cu-ece-357/hw/hw1p1\[?2004h[gary@s76l hw1p1]$ cat /[Kfile1 file2 > file3
+[?2004lkgary@s76l:~/tmp/git/cu-ece-357/hw/hw1p1\[?2004h[gary@s76l hw1p1]$ kitty file1 file2 > file4
+[?2004lbash: kitty: command not found...
+Install package 'kitty' to provide command 'kitty'? [N/y] 
+
+kgary@s76l:~/tmp/git/cu-ece-357/hw/hw1p1\[?2004h[gary@s76l hw1p1]$ kitty file1 file2 > file4[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[1@.[1@/
+[?2004lWarning! "file1" is a binary input!
+Warning! "file2" is a binary input!
+Total bytes written: 488636416
+Total read syscalls: 119298
+Total write syscalls: 119298
+kgary@s76l:~/tmp/git/cu-ece-357/hw/hw1p1\[?2004h[gary@s76l hw1p1]$ ./kitty -o fie[Kle5 file1 file2
+[?2004lWarning! "file1" is a binary input!
+Warning! "file2" is a binary input!
+Total bytes written: 488636416
+Total read syscalls: 119298
+Total write syscalls: 119298
+kgary@s76l:~/tmp/git/cu-ece-357/hw/hw1p1\[?2004h[gary@s76l hw1p1]$ sha256sum file3 file4 [K[K[K[K[K[K[K[K{3-5[K[K..}
+[?2004lsha256sum: file{3..}: No such file or directory
+kgary@s76l:~/tmp/git/cu-ece-357/hw/hw1p1\[?2004h[gary@s76l hw1p1]$ sha256sum file{3..}5}
+[?2004l7dc91eb3beb7ebcf9cb5258fc0d07dd46fb6b0cd0c6e9cf5e075a4ae0ef69dd0  file3
+7dc91eb3beb7ebcf9cb5258fc0d07dd46fb6b0cd0c6e9cf5e075a4ae0ef69dd0  file4
+7dc91eb3beb7ebcf9cb5258fc0d07dd46fb6b0cd0c6e9cf5e075a4ae0ef69dd0  file5
+kgary@s76l:~/tmp/git/cu-ece-357/hw/hw1p1\[?2004h[gary@s76l hw1p1]$ kitty -o /asdf file1 file2
+[?2004lbash: kitty: command not found...
+Install package 'kitty' to provide command 'kitty'? [N/y] ^C
+kgary@s76l:~/tmp/git/cu-ece-357/hw/hw1p1\[?2004h[gary@s76l hw1p1]$ kitty -o /asdf file1 file2[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[1@.[1@/
+[?2004lError while attempting to open output file "/asdf". errno = 13
+kgary@s76l:~/tmp/git/cu-ece-357/hw/hw1p1\[?2004h[gary@s76l hw1p1]$ exit
+[?2004lexit
