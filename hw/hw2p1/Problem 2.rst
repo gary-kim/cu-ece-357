@@ -9,6 +9,9 @@ b)
     ii. There are 5 references to the directory in directory lists. This could be references to the parent directory for directories inside this directory or it could be hard links to this directory (it is impossible to know without more information).
 
 c)
+    There is space taken up by non-data-blocks. Things like the Inode table, header, and free map take up extra space on the drive which can no longer be taken by the data itself.
+
+    The system may also have been set up with a reserve factor. This means that part of the drive is reserved and only usable by the `root` user in order to help avoid fragmentation on the drive.
 
 d)
     1. There may be another filesystem mounted inside the filesystem the user is attempting to unmount. 
