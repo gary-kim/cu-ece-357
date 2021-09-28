@@ -6,7 +6,7 @@ a)
 b)
     i. This is a directory inode.
     
-    ii. There are 5 references to the directory in directory lists. This could be references to the parent directory for directories inside this directory or it could be hard links to this directory (it is impossible to know without more information).
+    ii. There are 5 references to the directory in directory lists. This could be references to the parent directory for directories inside this directory or it could be hard links to this directory (it is impossible to know without more information). Since it is a directory, one link is the `.` from itself and one link is the link to the directory from the parent. It is not possible to know where the other links are from without more information.
 
 c)
     There is space taken up by non-data-blocks. Things like the Inode table, header, and free map take up extra space on the drive which can no longer be taken by the data itself.
@@ -20,7 +20,3 @@ d)
 
 e) 
     The **Inode Cache** helps for identifying each Inode inside the directory. It caches information such as the `nlinks`, the Inode type, permissions, user, and any other information stored on the Inode table about each entry. This helps speed up the `ls -l` operation since `ls - l` lists a lot of information from the Inode table.
-
-    TODO: Is any other cache used for this operation? Is there some cache that stores the data (list of names and Inodes) for the directory?
-
-
