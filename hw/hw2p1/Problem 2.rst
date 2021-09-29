@@ -20,3 +20,5 @@ d)
 
 e) 
     The **Inode Cache** helps for identifying each Inode inside the directory. It caches information such as the `nlinks`, the Inode type, permissions, user, and any other information stored on the Inode table about each entry. This helps speed up the `ls -l` operation since `ls - l` lists a lot of information from the Inode table.
+
+    The **Dentry Cache** helps for getting the list of entires inside the directory. The Dentry object includes a list of Dentry objects for the entries inside the directory. The Dentry cache caches this information. This helps avoid having to go to disk to look up the list of Inodes inside the directory for running `ls -l` as the Dentry includes this information meaning it is cached by the Dentry cache.
