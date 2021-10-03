@@ -23,9 +23,9 @@ int main(int argc, char** argv) {
     if (argc != 1) {
         l = argv[1];
     }
-    struct stat* ls;
-    lstat(l, ls);
-    recurse(l, ls);
+    struct stat ls;
+    lstat(l, &ls);
+    recurse(l, &ls);
 }
 
 void recurse(char *l, struct stat *ls) {
@@ -64,8 +64,7 @@ void print(char *name, struct stat *ls) {
 
     // Get user
     char user[MAX_NAME_LENGTH];
-    //struct passwd* u = getpwuid(ls->st_uid);
-    struct passwd* u = NULL;
+    struct passwd* u = getpwuid(ls->st_uid);
     if (u != NULL) {
         strcpy(user, u->pw_name);
     } else {
@@ -75,8 +74,7 @@ void print(char *name, struct stat *ls) {
 
     // Get group
     char group[MAX_NAME_LENGTH];
-    //struct group* g = getgrgid(ls->st_gid);
-    struct group* g = NULL;
+    struct group* g = getgrgid(ls->st_gid);
     if (g != NULL) {
         strcpy(group, g->gr_name);
     } else {
@@ -85,13 +83,23 @@ void print(char *name, struct stat *ls) {
 
     unsigned int size = ls->st_size;
 
-    // Sufficient space to store human readable mtime;
-    //char *mtime = ctime_r(mktime(localtime(&ls->st_mtim.tv_sec)), buf);
-    char *mtime = "NOT_WORKING";
+    // String with enough space to store the full string regardless of set locale
+    char mtime[256];
+    strftime(mtime, 256, "%b %2d %H:%M", localtime(&ls->st_mtim.tv_sec));
 
     // If it is a symlink
-    if (mode[0] == 'l') {
-        printf("%i %i %s %i %s %s %i %s %s -> %s\n", inodeNumber, size4k, mode, nlink, user, group, size, mtime, name, "LINK_TARGET");
+    if ((ls->st_mode & S_IFMT) == S_IFLNK) {
+        // Get link target
+        char linkTarget[PATH_MAX];
+
+        // `readlink` does not null-terminate the string so we must
+        // null out the entire string first.
+        for (int i = 0; i < PATH_MAX; i++) {
+            linkTarget[i] = '\0';
+        }
+
+        readlink(name, linkTarget, PATH_MAX);
+        printf("%i %i %s %i %s %s %i %s %s -> %s\n", inodeNumber, size4k, mode, nlink, user, group, size, mtime, name, linkTarget);
     } else {
         printf("%i %i %s %i %s %s %i %s %s\n", inodeNumber, size4k, mode, nlink, user, group, size, mtime, name);
     }

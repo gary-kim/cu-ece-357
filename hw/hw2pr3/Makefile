@@ -1,2 +1,2 @@
 badfind: badfind.c
-	gcc -o badfind badfind.c
+	gcc -std=gnu11 -o badfind badfind.c
