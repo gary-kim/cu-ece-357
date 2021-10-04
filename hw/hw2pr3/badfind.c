@@ -84,7 +84,7 @@ int print(char *name, struct stat *ls) {
   convertModeFlags(ls->st_mode, mode);
 
   unsigned int inodeNumber = ls->st_ino;
-  unsigned int size4k = ls->st_size / SIZE_UNITS;
+  unsigned int size1k = ls->st_size / SIZE_UNITS;
   unsigned int nlink = ls->st_nlink;
 
   // Get user
@@ -123,10 +123,10 @@ int print(char *name, struct stat *ls) {
     }
     // `readlink` does not null-terminate the string so we must put it ourselves
     linkTarget[len];
-    printf("%i %i %s %i %s %s %i %s %s -> %s\n", inodeNumber, size4k, mode,
+    printf("%i %i %s %i %s %s %i %s %s -> %s\n", inodeNumber, size1k, mode,
            nlink, user, group, size, mtime, name, linkTarget);
   } else {
-    printf("%i %i %s %i %s %s %i %s %s\n", inodeNumber, size4k, mode, nlink,
+    printf("%i %i %s %i %s %s %i %s %s\n", inodeNumber, size1k, mode, nlink,
            user, group, size, mtime, name);
   }
   return 0;
