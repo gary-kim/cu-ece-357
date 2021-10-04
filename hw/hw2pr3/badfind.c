@@ -48,7 +48,7 @@ int recurse(char *l, struct stat *ls) {
   }
   struct dirent *dire;
   while ((dire = readdir(d)) != NULL) {
-    if (dire == -1) { // There was an error in readdir
+    if ((long) dire == -1) { // There was an error in readdir
       fprintf(stderr, "Error attempting to read next file in directory \"%s\". err = %s", l, strerror(errno));
       return 1;
     }
@@ -122,7 +122,7 @@ int print(char *name, struct stat *ls) {
       return 1;
     }
     // `readlink` does not null-terminate the string so we must put it ourselves
-    linkTarget[len];
+    linkTarget[len] = '\0';
     printf("%i %i %s %i %s %s %i %s %s -> %s\n", inodeNumber, size1k, mode,
            nlink, user, group, size, mtime, name, linkTarget);
   } else {
