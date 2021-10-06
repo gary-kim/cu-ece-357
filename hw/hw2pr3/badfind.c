@@ -1,4 +1,5 @@
 #include <dirent.h>
+#include <errno.h>
 #include <grp.h>
 #include <linux/limits.h>
 #include <pwd.h>
@@ -8,7 +9,6 @@
 #include <sys/types.h>
 #include <time.h>
 #include <unistd.h>
-#include <errno.h>
 
 const unsigned int MODE_LENGTH = 10;
 const unsigned int SIZE_UNITS = 1 << 10;
@@ -25,7 +25,9 @@ int main(int argc, char **argv) {
   }
   struct stat ls;
   if (lstat(l, &ls) != 0) {
-    fprintf(stderr, "Ran into error trying to get information on \"%s\". err = %s", l, strerror(errno));
+    fprintf(stderr,
+            "Ran into error trying to get information on \"%s\". err = %s\n", l,
+            strerror(errno));
     return 0;
   }
   return recurse(l, &ls);
@@ -36,10 +38,14 @@ int recurse(char *l, struct stat *ls) {
   DIR *d = opendir(l);
   if (d == NULL) {
     if (errno == EACCES) {
-      // If the problem is simply a permissions problem, just don't continue in this directory
+      // If the problem is simply a permissions problem, just don't continue in
+      // this directory
+      fprintf(stderr, "Error: `%s`: %s\n", l, strerror(errno));
       return 0;
     }
-    fprintf(stderr, "Error while attempting to read directory \"%s\". err = %s", l, strerror(errno));
+    fprintf(stderr,
+            "Error while attempting to read directory \"%s\". err = %s\n", l,
+            strerror(errno));
     // Otherwise, error out
     return 1;
   }
@@ -48,15 +54,20 @@ int recurse(char *l, struct stat *ls) {
   }
   struct dirent *dire;
   while ((dire = readdir(d)) != NULL) {
-    if ((long) dire == -1) { // There was an error in readdir
-      fprintf(stderr, "Error attempting to read next file in directory \"%s\". err = %s", l, strerror(errno));
+    if ((long)dire == -1) {  // There was an error in readdir
+      fprintf(
+          stderr,
+          "Error attempting to read next file in directory \"%s\". err = %s\n",
+          l, strerror(errno));
       return 1;
     }
     int r;
-    char path[PATH_MAX];
+    char path[PATH_MAX + 1];
     sprintf(path, "%s/%s", l, dire->d_name);
     if (lstat(path, ls) != 0) {
-      fprintf(stderr, "Ran into error trying to get information on \"%s\". err = %s", l, strerror(errno));
+      fprintf(stderr,
+              "Ran into error trying to get information on \"%s\". err = %s\n",
+              l, strerror(errno));
       return 1;
     }
     if (strcmp(dire->d_name, ".") == 0) {
@@ -71,7 +82,7 @@ int recurse(char *l, struct stat *ls) {
       }
       continue;
     }
-    if((r = print(path, ls)) != 0) {
+    if ((r = print(path, ls)) != 0) {
       return r;
     }
   }
@@ -114,11 +125,12 @@ int print(char *name, struct stat *ls) {
   // If it is a symlink
   if ((ls->st_mode & S_IFMT) == S_IFLNK) {
     // Get link target
-    char linkTarget[PATH_MAX];
+    char linkTarget[PATH_MAX + 1];
 
     ssize_t len = readlink(name, linkTarget, PATH_MAX);
     if (len < 0) {
-      fprintf(stderr, "Ran into error trying to read symlink. err = %s\n", strerror(errno));
+      fprintf(stderr, "Ran into error trying to read symlink `%s`. err = %s\n",
+              name, strerror(errno));
       return 1;
     }
     // `readlink` does not null-terminate the string so we must put it ourselves
@@ -133,13 +145,13 @@ int print(char *name, struct stat *ls) {
 }
 
 void setPermissions(unsigned int perm, char *s) {
-  if ((perm & 04) == 04) {
+  if ((perm & S_IROTH) == S_IROTH) {
     s[0] = 'r';
   }
-  if ((perm & 02) == 02) {
+  if ((perm & S_IWOTH) == S_IWOTH) {
     s[1] = 'w';
   }
-  if ((perm & 01) == 01) {
+  if ((perm & S_IXOTH) == S_IXOTH) {
     s[2] = 'x';
   }
 }
