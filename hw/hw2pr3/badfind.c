@@ -139,14 +139,14 @@ void formatOutput(unsigned int inodeNumber, unsigned int size1k, char mode[], un
   char *size1kS = utoa(size1k, buffer, base);
   char *nlinkS = utoa(nlink, buffer, base);
   char *sizeS = utoa(size, buffer, base);
-  char size1kPadding[4 - strlen(size1kS)] = { ' ' };
-  size1kS = &strcat(size1kPadding,size1kS);
-  char nlinkPadding[3 - strlen(*nlinkS)] = { ' ' };
-  nlinkS = &strcat(nlinkPadding,nlinkS);
-  char sizePadding[10 - strlen(*sizeS)] = { ' ' };
-  sizeS = &strcat(sizePadding,sizeS);
+  char size1kPadding[4 - strlen(size1kS)];
+  size1kS = strcat(strset(size1kPadding,' '),size1kS);
+  char nlinkPadding[3 - strlen(*nlinkS)];
+  nlinkS = strcat(strset(nlinkPadding,' '),nlinkS);
+  char sizePadding[10 - strlen(*sizeS)];
+  sizeS = strcat(strset(sizePadding, ' '),sizeS);
 
-  if(case == 0){
+  if(option == 0){
     printf("%i %i %s %i %s %s %i %s %s -> %s\n", inodeNumber, size1k, mode,
            nlink, user, group, size, mtime, name, linkTarget);
   }else{
