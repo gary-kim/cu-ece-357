@@ -135,11 +135,11 @@ int print(char *name, struct stat *ls) {
 }
 
 void formatOutput(unsigned int inodeNumber, unsigned int size1k, char mode[], unsigned int nlink, char user[], char group[], unsigned int size, char mtime[], char *name, char linkTarget[], int option) {
-  int base = 10;
+  // int base = 10;
   char buffer[20];
-  char *size1kS = utoa(size1k, buffer, base);
-  char *nlinkS = utoa(nlink, buffer, base);
-  char *sizeS = utoa(size, buffer, base);
+  char *size1kS = utoa(size1k, buffer);
+  char *nlinkS = utoa(nlink, buffer);
+  char *sizeS = utoa(size, buffer);
   char size1kPadding[4 - strlen(size1kS)];
   size1kS = strcat(memset(size1kPadding,' ', sizeof size1kPadding),size1kS);
   char nlinkPadding[3 - strlen(*nlinkS)];
