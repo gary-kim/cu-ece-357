@@ -128,6 +128,7 @@ int print(char *name, struct stat *ls) {
     linkTarget[len] = '\0';
     formatOutput(inodeNumber, size1k, mode, nlink, user, group, size, mtime, name, linkTarget, 0);
   } else {
+    char linkTarget[PATH_MAX];
     formatOutput(inodeNumber, size1k, mode, nlink, user, group, size, mtime, name, linkTarget, 1);
   }
   return 0;
