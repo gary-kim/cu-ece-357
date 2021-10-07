@@ -13,13 +13,16 @@
 const unsigned int MODE_LENGTH = 10;
 const unsigned int SIZE_UNITS = 1 << 10;
 const unsigned int MAX_NAME_LENGTH = 1 << 5;
-
+int userMaxLength = 0;
+int groupMaxLength = 0;
 int print(char *name, struct stat *ls);
 int recurse(char *l, struct stat *ls);
 void convertModeFlags(unsigned int mode, char *s);
 
 int main(int argc, char **argv) {
   char *l = ".";
+  int maxUserLength = 0;
+  int maxGroupLength = 0;
   if (argc != 1) {
     l = argv[1];
   }
@@ -124,11 +127,23 @@ int print(char *name, struct stat *ls) {
     }
     // `readlink` does not null-terminate the string so we must put it ourselves
     linkTarget[len] = '\0';
-    printf("%i %4i %s %3i %s  %s %11i %s %s -> %s\n", inodeNumber, size1k, mode,
-           nlink, user, group, size, mtime, name, linkTarget);
+    if(strlen(user) > userMaxLength){
+      userMaxLength = strlen(user);
+    }
+    if(strlen(group) > groupMaxLength){
+      groupMaxLength = strlen(group);
+    }
+    printf("%i %4i %s %3i %*s  %*s %11i %s %s -> %s\n", inodeNumber, size1k, mode,
+           nlink, userMaxLength, user, groupMaxLength, group, size, mtime, name, linkTarget);
   } else {
-    printf("%i %4i %s %3i %s  %s %11i %s %s\n", inodeNumber, size1k, mode, nlink,
-           user, group, size, mtime, name);
+    if(strlen(user) > userMaxLength){
+      userMaxLength = strlen(user);
+    }
+    if(strlen(group) > groupMaxLength){
+      groupMaxLength = strlen(group);
+    }
+    printf("%i %4i %s %3i %*s  %*s %11i %s %s\n", inodeNumber, size1k, mode, nlink,
+           userMaxLength, user, groupMaxLength, group, size, mtime, name);
   }
   return 0;
 }
