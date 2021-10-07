@@ -110,6 +110,7 @@ int print(char *name, struct stat *ls) {
   // String with enough space to store the full string regardless of set locale
   char mtime[256];
   strftime(mtime, 256, "%b %2d %H:%M", localtime(&ls->st_mtim.tv_sec));
+  mtime[5] = ' ';
 
   // If it is a symlink
   if ((ls->st_mode & S_IFMT) == S_IFLNK) {
@@ -123,10 +124,10 @@ int print(char *name, struct stat *ls) {
     }
     // `readlink` does not null-terminate the string so we must put it ourselves
     linkTarget[len] = '\0';
-    printf("%i %4i %s %3i %s %s %10i %s %s -> %s\n", inodeNumber, size1k, mode,
+    printf("%i %4i %s %3i %s  %s %10i %s %s -> %s\n", inodeNumber, size1k, mode,
            nlink, user, group, size, mtime, name, linkTarget);
   } else {
-    printf("%i %4i %s %3i %s %s %10i %s %s\n", inodeNumber, size1k, mode, nlink,
+    printf("%i %4i %s %3i %s  %s %10i %s %s\n", inodeNumber, size1k, mode, nlink,
            user, group, size, mtime, name);
   }
   return 0;
