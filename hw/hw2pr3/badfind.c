@@ -126,7 +126,7 @@ int print(char *name, struct stat *ls) {
     printf("%i %4i %s %3i %s %s %10i %s %s -> %s\n", inodeNumber, size1k, mode,
            nlink, user, group, size, mtime, name, linkTarget);
   } else {
-    printf("%i %i %s %i %s %s %i %s %s\n", inodeNumber, size1k, mode, nlink,
+    printf("%i %4i %s %3i %s %s %10i %s %s\n", inodeNumber, size1k, mode, nlink,
            user, group, size, mtime, name);
   }
   return 0;
