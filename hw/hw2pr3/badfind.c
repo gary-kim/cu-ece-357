@@ -3,6 +3,7 @@
 #include <linux/limits.h>
 #include <pwd.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -16,6 +17,8 @@ const unsigned int MAX_NAME_LENGTH = 1 << 5;
 
 int print(char *name, struct stat *ls);
 int recurse(char *l, struct stat *ls);
+void formatOutput(unsigned int inodeNumber, unsigned int size1k, char mode[], unsigned int nlink, char user[], char group[], unsigned int size, char mtime[], char *name, int case);
+// char* utos(unsigned int input);
 void convertModeFlags(unsigned int mode, char *s);
 
 int main(int argc, char **argv) {
@@ -123,14 +126,39 @@ int print(char *name, struct stat *ls) {
     }
     // `readlink` does not null-terminate the string so we must put it ourselves
     linkTarget[len] = '\0';
-    printf("%i %i %s %i %s %s %i %s %s -> %s\n", inodeNumber, size1k, mode,
-           nlink, user, group, size, mtime, name, linkTarget);
+    formatOutput(inodeNumber, size1k, mode, nlink, user, group, size, mtime, name, 0);
   } else {
-    printf("%i %i %s %i %s %s %i %s %s\n", inodeNumber, size1k, mode, nlink,
-           user, group, size, mtime, name);
+    formatOutput(inodeNumber, size1k, mode, nlink, user, group, size, mtime, name, 1);
   }
   return 0;
 }
+
+void formatOutput(unsigned int inodeNumber, unsigned int size1k, char mode[], unsigned int nlink, char user[], char group[], unsigned int size, char mtime[], char *name, int case) {
+  int base = 10;
+  char buffer[20];
+  char *size1kS = utoa(size1k, buffer, base);
+  char *nlinkS = utoa(nlink, buffer, base);
+  char *sizeS = utoa(size, buffer, base);
+  char size1kPadding[4 - strlen(size1kS)] = { ' ' };
+  size1kS = &strcat(size1kPadding,size1kS);
+  char nlinkPadding[3 - strlen(*nlinkS)] = { ' ' };
+  nlinkS = &strcat(nlinkPadding,nlinkS);
+  char sizePadding[10 - strlen(*sizeS)] = { ' ' };
+  sizeS = &strcat(sizePadding,sizeS);
+
+  if(case == 0){
+    printf("%i %i %s %i %s %s %i %s %s -> %s\n", inodeNumber, size1k, mode,
+           nlink, user, group, size, mtime, name, linkTarget);
+  }else{
+    printf("%i %i %s %i %s %s %i %s %s\n", inodeNumber, size1k, mode, nlink,
+           user, group, size, mtime, name);
+  }
+}
+
+// char* utos(unsigned int input) {
+
+//   return 
+// }
 
 void setPermissions(unsigned int perm, char *s) {
   if ((perm & 04) == 04) {
