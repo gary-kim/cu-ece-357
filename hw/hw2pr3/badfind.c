@@ -18,7 +18,7 @@ const unsigned int MAX_NAME_LENGTH = 1 << 5;
 int print(char *name, struct stat *ls);
 int recurse(char *l, struct stat *ls);
 void formatOutput(unsigned int inodeNumber, unsigned int size1k, char mode[], unsigned int nlink, char user[], char group[], unsigned int size, char mtime[], char *name, char linkTarget[], int option);
-// char* utos(unsigned int input);
+char* utoa(unsigned int input, char *str);
 void convertModeFlags(unsigned int mode, char *s);
 
 int main(int argc, char **argv) {
@@ -156,10 +156,11 @@ void formatOutput(unsigned int inodeNumber, unsigned int size1k, char mode[], un
   }
 }
 
-// char* utos(unsigned int input) {
-
-//   return 
-// }
+char* utoa(unsigned int input, char *str) {
+  const char *format = "%u";
+  int size = sprintf(str, format, input);
+  return &str[size];
+}
 
 void setPermissions(unsigned int perm, char *s) {
   if ((perm & 04) == 04) {
