@@ -17,7 +17,7 @@ const unsigned int MAX_NAME_LENGTH = 1 << 5;
 
 int print(char *name, struct stat *ls);
 int recurse(char *l, struct stat *ls);
-void formatOutput(unsigned int inodeNumber, unsigned int size1k, char mode[], unsigned int nlink, char user[], char group[], unsigned int size, char mtime[], char *name, int option);
+void formatOutput(unsigned int inodeNumber, unsigned int size1k, char mode[], unsigned int nlink, char user[], char group[], unsigned int size, char mtime[], char *name, char linkTarget, int option);
 // char* utos(unsigned int input);
 void convertModeFlags(unsigned int mode, char *s);
 
@@ -126,14 +126,14 @@ int print(char *name, struct stat *ls) {
     }
     // `readlink` does not null-terminate the string so we must put it ourselves
     linkTarget[len] = '\0';
-    formatOutput(inodeNumber, size1k, mode, nlink, user, group, size, mtime, name, 0);
+    formatOutput(inodeNumber, size1k, mode, nlink, user, group, size, mtime, name, linkTarget, 0);
   } else {
-    formatOutput(inodeNumber, size1k, mode, nlink, user, group, size, mtime, name, 1);
+    formatOutput(inodeNumber, size1k, mode, nlink, user, group, size, mtime, name, linkTarget, 1);
   }
   return 0;
 }
 
-void formatOutput(unsigned int inodeNumber, unsigned int size1k, char mode[], unsigned int nlink, char user[], char group[], unsigned int size, char mtime[], char *name, int option) {
+void formatOutput(unsigned int inodeNumber, unsigned int size1k, char mode[], unsigned int nlink, char user[], char group[], unsigned int size, char mtime[], char *name, char linkTarget, int option) {
   int base = 10;
   char buffer[20];
   char *size1kS = utoa(size1k, buffer, base);
