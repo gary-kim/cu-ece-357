@@ -141,11 +141,11 @@ void formatOutput(unsigned int inodeNumber, unsigned int size1k, char mode[], un
   char *nlinkS = utoa(nlink, buffer, base);
   char *sizeS = utoa(size, buffer, base);
   char size1kPadding[4 - strlen(size1kS)];
-  size1kS = strcat(strset(size1kPadding,' '),size1kS);
+  size1kS = strcat(memset(size1kPadding,' ', sizeof size1kPadding),size1kS);
   char nlinkPadding[3 - strlen(*nlinkS)];
-  nlinkS = strcat(strset(nlinkPadding,' '),nlinkS);
+  nlinkS = strcat(memset(nlinkPadding,' ', sizeof nlinkPadding),nlinkS);
   char sizePadding[10 - strlen(*sizeS)];
-  sizeS = strcat(strset(sizePadding, ' '),sizeS);
+  sizeS = strcat(memset(sizePadding, ' ', sizeof sizePadding),sizeS);
 
   if(option == 0){
     printf("%i %i %s %i %s %s %i %s %s -> %s\n", inodeNumber, size1k, mode,
