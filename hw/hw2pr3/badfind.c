@@ -109,7 +109,7 @@ int print(char *name, struct stat *ls) {
 
   // String with enough space to store the full string regardless of set locale
   char mtime[256];
-  strftime(mtime, 256, "%b %d %H:%M", localtime(&ls->st_mtim.tv_sec));
+  strftime(mtime, 256, "%b %e %H:%M", localtime(&ls->st_mtim.tv_sec));
   // mtime[4] = ' ';
 
   // If it is a symlink
