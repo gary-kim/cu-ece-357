@@ -3,7 +3,6 @@
 #include <linux/limits.h>
 #include <pwd.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -17,8 +16,6 @@ const unsigned int MAX_NAME_LENGTH = 1 << 5;
 
 int print(char *name, struct stat *ls);
 int recurse(char *l, struct stat *ls);
-void formatOutput(unsigned int inodeNumber, unsigned int size1k, char mode[], unsigned int nlink, char user[], char group[], unsigned int size, char mtime[], char *name, char linkTarget[], int option);
-char* utoa(unsigned int input, char *str);
 void convertModeFlags(unsigned int mode, char *s);
 
 int main(int argc, char **argv) {
@@ -126,40 +123,13 @@ int print(char *name, struct stat *ls) {
     }
     // `readlink` does not null-terminate the string so we must put it ourselves
     linkTarget[len] = '\0';
-    formatOutput(inodeNumber, size1k, mode, nlink, user, group, size, mtime, name, linkTarget, 0);
-  } else {
-    char linkTarget[PATH_MAX];
-    formatOutput(inodeNumber, size1k, mode, nlink, user, group, size, mtime, name, linkTarget, 1);
-  }
-  return 0;
-}
-
-void formatOutput(unsigned int inodeNumber, unsigned int size1k, char mode[], unsigned int nlink, char user[], char group[], unsigned int size, char mtime[], char *name, char linkTarget[], int option) {
-  // int base = 10;
-  char buffer[20];
-  char *size1kS = utoa(size1k, buffer);
-  char *nlinkS = utoa(nlink, buffer);
-  char *sizeS = utoa(size, buffer);
-  char size1kPadding[4 - strlen(size1kS)];
-  size1kS = strcat(memset(size1kPadding,' ', sizeof size1kPadding),size1kS);
-  char nlinkPadding[3 - strlen(*nlinkS)];
-  nlinkS = strcat(memset(nlinkPadding,' ', sizeof nlinkPadding),nlinkS);
-  char sizePadding[10 - strlen(*sizeS)];
-  sizeS = strcat(memset(sizePadding, ' ', sizeof sizePadding),sizeS);
-
-  if(option == 0){
-    printf("%i %i %s %i %s %s %i %s %s -> %s\n", inodeNumber, size1k, mode,
+    printf("%i %4i %s %3i %s %s %10i %s %s -> %s\n", inodeNumber, size1k, mode,
            nlink, user, group, size, mtime, name, linkTarget);
-  }else{
+  } else {
     printf("%i %i %s %i %s %s %i %s %s\n", inodeNumber, size1k, mode, nlink,
            user, group, size, mtime, name);
   }
-}
-
-char* utoa(unsigned int input, char *str) {
-  const char *format = "%u";
-  int size = sprintf(str, format, input);
-  return &str[size];
+  return 0;
 }
 
 void setPermissions(unsigned int perm, char *s) {
