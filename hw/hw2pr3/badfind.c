@@ -206,8 +206,16 @@ int print(char *name, struct stat *ls) {
   unsigned int size = ls->st_size;
 
   // String with enough space to store the full string regardless of set locale
+  // Template for strftime based off GNU Findutils
+  // https://git.savannah.gnu.org/cgit/findutils.git/tree/lib/listfile.c?id=5768a03ddfb5e18b1682e339d6cdd24ff721c510
   char mtime[256];
-  strftime(mtime, 256, "%b %e %H:%M", localtime(&ls->st_mtim.tv_sec));
+  time_t current_time = time(NULL);
+  strftime(mtime, 256,
+           (current_time - 6 * 30 * 24 * 60 * 60 <= ls->st_mtime &&
+            ls->st_mtime <= current_time + 60 * 60)
+               ? "%b %e %H:%M"
+               : "%b %e  %Y",
+           localtime(&ls->st_mtim.tv_sec));
 
   // If it is a symlink
   if ((ls->st_mode & S_IFMT) == S_IFLNK) {
@@ -294,7 +302,7 @@ void convertModeFlags(unsigned int mode, char *s) {
     }
   }
 
-  if ((mode & S_ISGID) == S_ISGID) {
+  if ((mode & S_ISUID) == S_ISUID) {
     if (s[3] == '-') {
       s[3] = 'S';
     } else {
