@@ -98,13 +98,11 @@ int recurse(char *l, struct stat *ls) {
   return 0;
 }
 
-int max(int val1, int val2) {
-  return (val1 > val2) ? val1 : val2;
-}
+int max(int val1, int val2) { return (val1 > val2) ? val1 : val2; }
 
 // Filename escaping based off implementation in GNU Findutils
 // https://git.savannah.gnu.org/cgit/findutils.git/tree/lib/listfile.c?id=5768a03ddfb5e18b1682e339d6cdd24ff721c510
-void printFileName (char* name) {
+void printFileName(char *name) {
   char c;
   while ((c = *name++) != '\0') {
     switch (c) {
@@ -140,13 +138,10 @@ void printFileName (char* name) {
         printf("\\\"");
         break;
       default:
-        if (c > 040 && c < 0177)
-        {
+        if (c > 040 && c < 0177) {
           printf("%c", c);
-        }
-        else
-        {
-          printf("\\%03o", (unsigned int) c);
+        } else {
+          printf("\\%03o", (unsigned int)c);
         }
     }
   }
@@ -154,15 +149,20 @@ void printFileName (char* name) {
 
 // Print padding based off of print padding in GNU Findutils
 // https://git.savannah.gnu.org/cgit/findutils.git/tree/lib/listfile.c?id=5768a03ddfb5e18b1682e339d6cdd24ff721c510
-void _print(unsigned int inodeNumber, unsigned int blksize, char* mode, unsigned int nlink, char* user, char* group, unsigned int size, char* mtime, char* name, char* linkTarget) {
+void _print(unsigned int inodeNumber, unsigned int blksize, char *mode,
+            unsigned int nlink, char *user, char *group, unsigned int size,
+            char *mtime, char *name, char *linkTarget) {
   // Some output numbers are subtracted by 1 or 2 to account for spaces.
-  inode_number_width = max(printf(" %*i ", inode_number_width, inodeNumber) - 2, inode_number_width);
-  block_size_width = max(printf("%*i ", block_size_width, blksize) - 1, block_size_width);
+  inode_number_width = max(printf(" %*i ", inode_number_width, inodeNumber) - 2,
+                           inode_number_width);
+  block_size_width =
+      max(printf("%*i ", block_size_width, blksize) - 1, block_size_width);
   printf("%s ", mode);
   nlink_width = max(printf("%*i ", nlink_width, nlink) - 1, nlink_width);
   owner_width = max(printf("%-*s ", owner_width, user) - 1, owner_width);
   group_width = max(printf("%-*s ", group_width, group) - 1, group_width);
-  file_size_width = max(printf("%*i ", file_size_width, size) - 1, file_size_width);
+  file_size_width =
+      max(printf("%*i ", file_size_width, size) - 1, file_size_width);
   printf("%s ", mtime);
   printFileName(name);
   if (linkTarget != NULL) {
@@ -178,8 +178,10 @@ int print(char *name, struct stat *ls) {
   convertModeFlags(ls->st_mode, mode);
 
   unsigned int inodeNumber = ls->st_ino;
-  // st_blocks gives number of 512 byte blocks allocated but `find -ls` counts in 1024 byte blocks unless POSIXLY_CORRECT env variable is set.
-  // To replicate the behavior without the environment variable, divide the number of blocks by 1024/512 = 2;
+  // st_blocks gives number of 512 byte blocks allocated but `find -ls` counts
+  // in 1024 byte blocks unless POSIXLY_CORRECT env variable is set. To
+  // replicate the behavior without the environment variable, divide the number
+  // of blocks by 1024/512 = 2;
   unsigned int blksize = ls->st_blocks / 2;
   unsigned int nlink = ls->st_nlink;
 
@@ -189,7 +191,6 @@ int print(char *name, struct stat *ls) {
   if (u != NULL) {
     strcpy(user, u->pw_name);
   } else {
-    fprintf(stderr, "Error finding owner username: `%s` %s", name, strerror(errno));
     sprintf(user, "%i", ls->st_uid);
   }
 
@@ -199,7 +200,6 @@ int print(char *name, struct stat *ls) {
   if (g != NULL) {
     strcpy(group, g->gr_name);
   } else {
-    fprintf(stderr, "Error finding owner group name: `%s` %s", name, strerror(errno));
     sprintf(group, "%i", ls->st_gid);
   }
 
@@ -221,11 +221,12 @@ int print(char *name, struct stat *ls) {
     }
     // `readlink` does not null-terminate the string so we must put it ourselves
     linkTarget[len] = '\0';
-    _print(inodeNumber, blksize, mode,
-           nlink, user, group, size, mtime, name, linkTarget);
+    _print(inodeNumber, blksize, mode, nlink, user, group, size, mtime, name,
+           linkTarget);
     return 0;
   }
-  _print(inodeNumber, blksize, mode, nlink, user, group, size, mtime, name, NULL);
+  _print(inodeNumber, blksize, mode, nlink, user, group, size, mtime, name,
+         NULL);
   return 0;
 }
 
