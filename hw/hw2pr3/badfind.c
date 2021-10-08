@@ -198,4 +198,16 @@ void convertModeFlags(unsigned int mode, char *s) {
 
   // Set other permissions
   setPermissions(mode, s + 7);
+
+  if ((mode & S_ISGID) == S_ISGID) {
+      s[6] = 's';
+  }
+
+  if ((mode & S_ISGID) == S_ISGID) {
+      s[3] = 's';
+  }
+
+  if ((mode & S_ISVTX) == S_ISVTX) {
+      s[9] = 't';
+  }
 }
