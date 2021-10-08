@@ -4,6 +4,7 @@
 #include <linux/limits.h>
 #include <pwd.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -11,8 +12,16 @@
 #include <unistd.h>
 
 const unsigned int MODE_LENGTH = 10;
-const unsigned int SIZE_UNITS = 1 << 10;
 const unsigned int MAX_NAME_LENGTH = 1 << 5;
+
+// Method for padding came from the GNU Findutils source code.
+// https://git.savannah.gnu.org/cgit/findutils.git/tree/lib/listfile.c?id=5768a03ddfb5e18b1682e339d6cdd24ff721c510
+static int inode_number_width = 8;
+static int block_size_width = 6;
+static int nlink_width = 3;
+static int owner_width = 8;
+static int group_width = 8;
+static int file_size_width = 8;
 
 int print(char *name, struct stat *ls);
 int recurse(char *l, struct stat *ls);
@@ -89,13 +98,89 @@ int recurse(char *l, struct stat *ls) {
   return 0;
 }
 
+int max(int val1, int val2) {
+  return (val1 > val2) ? val1 : val2;
+}
+
+// Filename escaping based off implementation in GNU Findutils
+// https://git.savannah.gnu.org/cgit/findutils.git/tree/lib/listfile.c?id=5768a03ddfb5e18b1682e339d6cdd24ff721c510
+void printFileName (char* name) {
+  char c;
+  while ((c = *name++) != '\0') {
+    switch (c) {
+      case '\\':
+        printf("\\\\");
+        break;
+
+      case '\n':
+        printf("\\n");
+        break;
+
+      case '\b':
+        printf("\\b");
+        break;
+
+      case '\r':
+        printf("\\r");
+        break;
+
+      case '\t':
+        printf("\\t");
+        break;
+
+      case '\f':
+        printf("\\f");
+        break;
+
+      case ' ':
+        printf("\\ ");
+        break;
+
+      case '"':
+        printf("\\\"");
+        break;
+      default:
+        if (c > 040 && c < 0177)
+        {
+          printf("%c", c);
+        }
+        else
+        {
+          printf("\\%03o", (unsigned int) c);
+        }
+    }
+  }
+}
+
+// Print padding based off of print padding in GNU Findutils
+// https://git.savannah.gnu.org/cgit/findutils.git/tree/lib/listfile.c?id=5768a03ddfb5e18b1682e339d6cdd24ff721c510
+void _print(unsigned int inodeNumber, unsigned int blksize, char* mode, unsigned int nlink, char* user, char* group, unsigned int size, char* mtime, char* name, char* linkTarget) {
+  // Some output numbers are subtracted by 1 or 2 to account for spaces.
+  inode_number_width = max(printf(" %*i ", inode_number_width, inodeNumber) - 2, inode_number_width);
+  block_size_width = max(printf("%*i ", block_size_width, blksize) - 1, block_size_width);
+  printf("%s ", mode);
+  nlink_width = max(printf("%*i ", nlink_width, nlink) - 1, nlink_width);
+  owner_width = max(printf("%-*s ", owner_width, user) - 1, owner_width);
+  group_width = max(printf("%-*s ", group_width, group) - 1, group_width);
+  file_size_width = max(printf("%*i ", file_size_width, size) - 1, file_size_width);
+  printf("%s ", mtime);
+  printFileName(name);
+  if (linkTarget != NULL) {
+    printf(" -> ");
+    printFileName(linkTarget);
+  }
+  printf("\n");
+}
+
 int print(char *name, struct stat *ls) {
   // Get mode
   char mode[MODE_LENGTH + 1];
   convertModeFlags(ls->st_mode, mode);
 
   unsigned int inodeNumber = ls->st_ino;
-  unsigned int size1k = ls->st_size / SIZE_UNITS;
+  // st_blocks gives number of 512 byte blocks allocated but `find -ls` counts in 1024 byte blocks unless POSIXLY_CORRECT env variable is set.
+  // To replicate the behavior without the environment variable, divide the number of blocks by 1024/512 = 2;
+  unsigned int blksize = ls->st_blocks / 2;
   unsigned int nlink = ls->st_nlink;
 
   // Get user
@@ -104,6 +189,7 @@ int print(char *name, struct stat *ls) {
   if (u != NULL) {
     strcpy(user, u->pw_name);
   } else {
+    fprintf(stderr, "Error finding owner username: `%s` %s", name, strerror(errno));
     sprintf(user, "%i", ls->st_uid);
   }
 
@@ -113,6 +199,7 @@ int print(char *name, struct stat *ls) {
   if (g != NULL) {
     strcpy(group, g->gr_name);
   } else {
+    fprintf(stderr, "Error finding owner group name: `%s` %s", name, strerror(errno));
     sprintf(group, "%i", ls->st_gid);
   }
 
@@ -120,13 +207,12 @@ int print(char *name, struct stat *ls) {
 
   // String with enough space to store the full string regardless of set locale
   char mtime[256];
-  strftime(mtime, 256, "%b %2d %H:%M", localtime(&ls->st_mtim.tv_sec));
+  strftime(mtime, 256, "%b %e %H:%M", localtime(&ls->st_mtim.tv_sec));
 
   // If it is a symlink
   if ((ls->st_mode & S_IFMT) == S_IFLNK) {
     // Get link target
     char linkTarget[PATH_MAX + 1];
-
     ssize_t len = readlink(name, linkTarget, PATH_MAX);
     if (len < 0) {
       fprintf(stderr, "Ran into error trying to read symlink `%s`. err = %s\n",
@@ -135,12 +221,11 @@ int print(char *name, struct stat *ls) {
     }
     // `readlink` does not null-terminate the string so we must put it ourselves
     linkTarget[len] = '\0';
-    printf("%i %i %s %i %s %s %i %s %s -> %s\n", inodeNumber, size1k, mode,
+    _print(inodeNumber, blksize, mode,
            nlink, user, group, size, mtime, name, linkTarget);
-  } else {
-    printf("%i %i %s %i %s %s %i %s %s\n", inodeNumber, size1k, mode, nlink,
-           user, group, size, mtime, name);
+    return 0;
   }
+  _print(inodeNumber, blksize, mode, nlink, user, group, size, mtime, name, NULL);
   return 0;
 }
 
@@ -199,15 +284,28 @@ void convertModeFlags(unsigned int mode, char *s) {
   // Set other permissions
   setPermissions(mode, s + 7);
 
+  // Setting for setuid, setgid, and sticky
   if ((mode & S_ISGID) == S_ISGID) {
+    if (s[6] == '-') {
+      s[6] = 'S';
+    } else {
       s[6] = 's';
+    }
   }
 
   if ((mode & S_ISGID) == S_ISGID) {
+    if (s[3] == '-') {
+      s[3] = 'S';
+    } else {
       s[3] = 's';
+    }
   }
 
   if ((mode & S_ISVTX) == S_ISVTX) {
+    if (s[9] == '-') {
+      s[9] = 'T';
+    } else {
       s[9] = 't';
+    }
   }
 }
