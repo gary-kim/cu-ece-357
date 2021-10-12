@@ -6,3 +6,4 @@ b)
 c)
     The registers are not shared between the different threads.
 
+    The stack section of the memory space is also not shared between the different threads.
