@@ -144,6 +144,7 @@ struct exitInfo child(struct programInfo *pi) {
     case -1:
       ei.errnum = errno;
       fprintf(stderr, "Error forking process. err: %s\n", strerror(errno));
+      break;
     case 0:
       // Set file descriptors
       if (pi->stdin != 0) {
@@ -160,25 +161,32 @@ struct exitInfo child(struct programInfo *pi) {
       }
       if (execvp(pi->path, pi->argv) == -1) {
         ei.errnum = errno;
-        fprintf(stderr, "Error forking process. err: %s\n", strerror(errno));
+        fprintf(stderr, "Error execing process. err: %s\n", strerror(errno));
       }
+      exit(127);
     default:
       if (wait4(ei.pid, &ei.wstatus, 0, &ei.usage) == -1) {
         ei.errnum = errno;
         fprintf(stderr, "Error waiting for process. err: %s\n",
                 strerror(errno));
       }
-      if (pi->stdin != 0) {
-        close(pi->stdin);
-      }
-      if (pi->stdout != 1) {
-        close(pi->stdout);
-      }
-      if (pi->stderr != 2) {
-        close(pi->stderr);
-      }
+
       return ei;
   }
+  if (pi->stdin != 0) {
+    close(pi->stdin);
+  }
+  if (pi->stdout != 1) {
+    close(pi->stdout);
+  }
+  if (pi->stderr != 2) {
+    close(pi->stderr);
+  }
+  for (int i = 0; pi->argv[i] != NULL; i++) {
+    free(pi->argv[i]);
+  }
+  free(pi->argv);
+  free(pi->path);
 }
 // -1 return is fatal error or time to exit
 // > 0 return is request to exit with that status code
@@ -252,9 +260,12 @@ int readCommand(FILE *input) {
   }
   fprintf(stderr, "Real: %.3Lfs, User: %.3Lfs, Sys: %.3Lfs\n",
           (long double)(ei.usage.ru_utime.tv_usec + ei.usage.ru_stime.tv_usec) /
-              1000000,
-          (long double)ei.usage.ru_utime.tv_usec / 1000000,
-          (long double)ei.usage.ru_stime.tv_usec / 1000000);
+                  1000000 +
+              ei.usage.ru_utime.tv_sec + ei.usage.ru_stime.tv_sec,
+          (long double)ei.usage.ru_utime.tv_usec / 1000000 +
+              ei.usage.ru_utime.tv_sec + ei.usage.ru_stime.tv_sec,
+          (long double)ei.usage.ru_stime.tv_usec / 1000000) +
+      ei.usage.ru_utime.tv_sec + ei.usage.ru_stime.tv_sec;
   status = WEXITSTATUS(ei.wstatus);
   // Error handling
   return 0;
