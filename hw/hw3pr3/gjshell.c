@@ -41,7 +41,8 @@ struct programInfo tokenizer(char *input) {
   }
   pi.path = malloc(strlen(token) + 1);
   strcpy(pi.path, token);
-  pi.argv = malloc(1 * sizeof(char *));
+  pi.argv = malloc(8 * sizeof(char *));
+  int argvSize = 8;
   pi.argv[0] = pi.path;
 
   token = strtok(NULL, delimiter);
@@ -53,11 +54,13 @@ struct programInfo tokenizer(char *input) {
         token = strtok(NULL, delimiter);
       }
       pi.stdout = open(token, O_CREAT | O_APPEND | O_WRONLY, 0664);
+      // There used to be more complex error handling here to make sure
+      // the child is not started if the redirects cannot be done but
+      // the assignment requirements assume this error will be dealt with
+      // in the child, so we will leave the error to be dealt with in the child.
       if (pi.stdout == -1) {
-        pi.errnum = errno;
         fprintf(stderr, "Error opening file: %s, err: %s\n", token,
                 strerror(errno));
-        return pi;
       }
     } else if (token[0] == '2' && token[1] == '>' &&
                token[2] == '>') {  // for 2>> redirection
@@ -68,10 +71,8 @@ struct programInfo tokenizer(char *input) {
       }
       pi.stderr = open(token, O_CREAT | O_APPEND | O_WRONLY, 0664);
       if (pi.stderr == -1) {
-        pi.errnum = errno;
         fprintf(stderr, "Error opening file: %s, err: %s\n", token,
                 strerror(errno));
-        return pi;
       }
     } else if (token[0] == '2' && token[1] == '>') {  // for 2> redirection
       if (strlen(token) != 2) {
@@ -81,10 +82,8 @@ struct programInfo tokenizer(char *input) {
       }
       pi.stderr = open(token, O_CREAT | O_APPEND | O_TRUNC | O_WRONLY, 0664);
       if (pi.stderr == -1) {
-        pi.errnum = errno;
         fprintf(stderr, "Error opening file: %s, err: %s\n", token,
                 strerror(errno));
-        return pi;
       }
     } else if (token[0] == '>') {  // for > redirection
       if (strlen(token) != 1) {
@@ -94,10 +93,8 @@ struct programInfo tokenizer(char *input) {
       }
       pi.stdout = open(token, O_CREAT | O_APPEND | O_TRUNC | O_WRONLY, 0664);
       if (pi.stdout == -1) {
-        pi.errnum = errno;
         fprintf(stderr, "Error opening file: %s, err: %s\n", token,
                 strerror(errno));
-        return pi;
       }
     } else if (token[0] == '<') {  // for < redirection
       if (strlen(token) != 1) {
@@ -107,18 +104,20 @@ struct programInfo tokenizer(char *input) {
       }
       pi.stdin = open(token, O_RDONLY, 0664);
       if (pi.stdin == -1) {
-        pi.errnum = errno;
         fprintf(stderr, "Error opening file: %s, err: %s\n", token,
                 strerror(errno));
-        return pi;
       }
     } else {
-      char **prevargv = pi.argv;
-      pi.argv = malloc((pi.argc + 1) * sizeof(char *));
-      for (int i = 0; i < pi.argc; i++) {
-        pi.argv[i] = prevargv[i];
+      // Increase size as we go to be twice the previous size.
+      if (pi.argc >= argvSize - 1) {
+        char **prevargv = pi.argv;
+        argvSize = argvSize * 2;
+        pi.argv = malloc((argvSize) * sizeof(char *));
+        for (int i = 0; i < pi.argc; i++) {
+          pi.argv[i] = prevargv[i];
+        }
+        free(prevargv);
       }
-      free(prevargv);
       pi.argv[pi.argc] = malloc(strlen(token) + 1);
       strcpy(pi.argv[pi.argc], token);
       pi.argc++;
@@ -126,19 +125,13 @@ struct programInfo tokenizer(char *input) {
 
     token = strtok(NULL, delimiter);
   }
-  char **prevargv = pi.argv;
-  pi.argv = malloc((pi.argc + 1) * sizeof(char *));
-  for (int i = 0; i < pi.argc; i++) {
-    pi.argv[i] = prevargv[i];
-  }
-  free(prevargv);
   pi.argv[pi.argc] = NULL;
   return pi;
 }
 
 // Will start the requested program in programInfo and closes the file
-// descriptors that have been opened for it Not reentry safe!
-struct exitInfo child(struct programInfo *pi) {
+// descriptors that have been opened for it. Not reentry safe!
+struct exitInfo child(struct programInfo *pi, FILE *input) {
   struct exitInfo ei = {0, {}, 0, 0};
   switch (ei.pid = fork()) {
     case -1:
@@ -147,6 +140,12 @@ struct exitInfo child(struct programInfo *pi) {
       break;
     case 0:
       // Set file descriptors
+      if (pi->stdin < 0 || pi->stdout < 0 || pi->stderr < 0) {
+        exit(1);
+      }
+      if (input != stdin) {
+        fclose(input);
+      }
       if (pi->stdin != 0) {
         dup2(pi->stdin, 0);
         close(pi->stdin);
@@ -192,11 +191,12 @@ struct exitInfo child(struct programInfo *pi) {
 // > 0 return is request to exit with that status code
 // 0 error is normal
 int readCommand(FILE *input) {
-  char *line;
-  size_t len = 0;
+  char *line = alloca(BUFSIZ);
+  size_t len = BUFSIZ;
   ssize_t size = getline(&line, &len, input);
-  if (size == 0) {
-    return -1;
+  if (size == -1 || size == 0) {
+    fprintf(stderr, "end of file read, exiting shell with exit code %i\n", status);
+    exit(status);
   }
   if (size == 1) {
     return 0;
@@ -211,9 +211,7 @@ int readCommand(FILE *input) {
   }
   if (strcmp(pi.path, "cd") == 0) {
     if (pi.argc < 2) {
-      fprintf(stderr,
-              "Error changing directory, directory to switch to must be "
-              "specified\n");
+      pi.argv[1] = getenv("HOME");
     }
     if (chdir(pi.argv[1]) == -1) {
       fprintf(stderr, "Error changing directory, err: %s\n", strerror(errno));
@@ -221,8 +219,8 @@ int readCommand(FILE *input) {
     return 0;
   }
   if (strcmp(pi.path, "pwd") == 0) {
-    char buf[PATH_MAX + 1];
-    if (getcwd(buf, PATH_MAX + 1) == NULL) {
+    char buf[PATH_MAX];
+    if (getcwd(buf, PATH_MAX) == NULL) {
       fprintf(stderr, "Error getting current directory, err: %s\n",
               strerror(errno));
       return 0;
@@ -243,20 +241,22 @@ int readCommand(FILE *input) {
     }
     exit(status);
   }
-  struct exitInfo ei = child(&pi);
+  struct exitInfo ei = child(&pi, input);
   if (ei.errnum != 0) {
     return 0;
   }
   if (WIFSIGNALED(ei.wstatus)) {
     fprintf(stderr, "Child process %i exited with signal %i (%s)\n", ei.pid,
             WTERMSIG(ei.wstatus), strsignal(WTERMSIG(ei.wstatus)));
-  } else if (WIFEXITED(ei.wstatus)) {
+    status = WTERMSIG(ei.wstatus);
+  } else {
     if (WEXITSTATUS(ei.wstatus) == 0) {
       fprintf(stderr, "Child process %i exited normally\n", ei.pid);
     } else {
       fprintf(stderr, "Child process %i exited with return value %i\n", ei.pid,
               WEXITSTATUS(ei.wstatus));
     }
+    status = WEXITSTATUS(ei.wstatus);
   }
   fprintf(stderr, "Real: %.3Lfs, User: %.3Lfs, Sys: %.3Lfs\n",
           (long double)(ei.usage.ru_utime.tv_usec + ei.usage.ru_stime.tv_usec) /
@@ -266,7 +266,6 @@ int readCommand(FILE *input) {
               ei.usage.ru_utime.tv_sec + ei.usage.ru_stime.tv_sec,
           (long double)ei.usage.ru_stime.tv_usec / 1000000) +
       ei.usage.ru_utime.tv_sec + ei.usage.ru_stime.tv_sec;
-  status = WEXITSTATUS(ei.wstatus);
   // Error handling
   return 0;
 }
@@ -281,8 +280,7 @@ int main(int argc, char **argv) {
       return 1;
     }
   }
-  int re;
-  while ((re = readCommand(input)) == 0)
+  while (readCommand(input) == 0)
     ;
-  return re;
+  return 0;
 }
