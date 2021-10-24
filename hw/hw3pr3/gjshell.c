@@ -83,7 +83,7 @@ struct programInfo tokenizer(char *input) {
       } else {
         token = strtok(NULL, delimiter);
       }
-      pi.stderr = open(token, O_CREAT | O_APPEND | O_TRUNC | O_WRONLY, 0664);
+      pi.stderr = open(token, O_CREAT | O_TRUNC | O_WRONLY, 0664);
       if (pi.stderr == -1) {
         fprintf(stderr, "Error opening file: %s, err: %s\n", token,
                 strerror(errno));
@@ -94,7 +94,7 @@ struct programInfo tokenizer(char *input) {
       } else {
         token = strtok(NULL, delimiter);
       }
-      pi.stdout = open(token, O_CREAT | O_APPEND | O_TRUNC | O_WRONLY, 0664);
+      pi.stdout = open(token, O_CREAT | O_TRUNC | O_WRONLY, 0664);
       if (pi.stdout == -1) {
         fprintf(stderr, "Error opening file: %s, err: %s\n", token,
                 strerror(errno));
