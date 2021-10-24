@@ -10,8 +10,8 @@
 #include <sys/time.h>
 #include <sys/types.h>
 #include <sys/wait.h>
-#include <unistd.h>
 #include <time.h>
+#include <unistd.h>
 
 static int status = 0;
 
@@ -135,7 +135,7 @@ struct programInfo tokenizer(char *input) {
 // Will start the requested program in programInfo and closes the file
 // descriptors that have been opened for it. Not reentry safe!
 struct exitInfo child(struct programInfo *pi, FILE *input) {
-  struct exitInfo ei = {0, {}, 0, 0};
+  struct exitInfo ei = {0, {}, 0, 0, {}, {}};
   gettimeofday(&ei.start, NULL);
   switch (ei.pid = fork()) {
     case -1:
@@ -174,7 +174,6 @@ struct exitInfo child(struct programInfo *pi, FILE *input) {
                 strerror(errno));
       }
       gettimeofday(&ei.end, NULL);
-      return ei;
   }
   if (pi->stdin != 0) {
     close(pi->stdin);
@@ -189,17 +188,16 @@ struct exitInfo child(struct programInfo *pi, FILE *input) {
     free(pi->argv[i]);
   }
   free(pi->argv);
-  free(pi->path);
+  return ei;
 }
-// -1 return is fatal error or time to exit
-// > 0 return is request to exit with that status code
-// 0 error is normal
+
 int readCommand(FILE *input) {
   char *line = alloca(BUFSIZ);
   size_t len = BUFSIZ;
   ssize_t size = getline(&line, &len, input);
   if (size == -1 || size == 0) {
-    fprintf(stderr, "end of file read, exiting shell with exit code %i\n", status);
+    fprintf(stderr, "end of file read, exiting shell with exit code %i\n",
+            status);
     exit(status);
   }
   if (size == 1) {
@@ -263,14 +261,12 @@ int readCommand(FILE *input) {
     status = WEXITSTATUS(ei.wstatus);
   }
   fprintf(stderr, "Real: %.3Lfs, User: %.3Lfs, Sys: %.3Lfs\n",
-          (long double)(ei.end.tv_usec - ei.start.tv_usec) /
-                  1000000 +
+          (long double)(ei.end.tv_usec - ei.start.tv_usec) / 1000000 +
               ei.end.tv_sec - ei.start.tv_sec,
           (long double)ei.usage.ru_utime.tv_usec / 1000000 +
               ei.usage.ru_utime.tv_sec + ei.usage.ru_stime.tv_sec,
           (long double)ei.usage.ru_stime.tv_usec / 1000000) +
       ei.usage.ru_utime.tv_sec + ei.usage.ru_stime.tv_sec;
-  // Error handling
   return 0;
 }
 
