@@ -11,6 +11,7 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
+#include <time.h>
 
 static int status = 0;
 
@@ -19,6 +20,8 @@ struct exitInfo {
   struct rusage usage;
   int errnum;
   pid_t pid;
+  struct timeval start;
+  struct timeval end;
 };
 
 struct programInfo {
@@ -133,6 +136,7 @@ struct programInfo tokenizer(char *input) {
 // descriptors that have been opened for it. Not reentry safe!
 struct exitInfo child(struct programInfo *pi, FILE *input) {
   struct exitInfo ei = {0, {}, 0, 0};
+  gettimeofday(&ei.start, NULL);
   switch (ei.pid = fork()) {
     case -1:
       ei.errnum = errno;
@@ -169,7 +173,7 @@ struct exitInfo child(struct programInfo *pi, FILE *input) {
         fprintf(stderr, "Error waiting for process. err: %s\n",
                 strerror(errno));
       }
-
+      gettimeofday(&ei.end, NULL);
       return ei;
   }
   if (pi->stdin != 0) {
@@ -259,9 +263,9 @@ int readCommand(FILE *input) {
     status = WEXITSTATUS(ei.wstatus);
   }
   fprintf(stderr, "Real: %.3Lfs, User: %.3Lfs, Sys: %.3Lfs\n",
-          (long double)(ei.usage.ru_utime.tv_usec + ei.usage.ru_stime.tv_usec) /
+          (long double)(ei.end.tv_usec - ei.start.tv_usec) /
                   1000000 +
-              ei.usage.ru_utime.tv_sec + ei.usage.ru_stime.tv_sec,
+              ei.end.tv_sec - ei.start.tv_sec,
           (long double)ei.usage.ru_utime.tv_usec / 1000000 +
               ei.usage.ru_utime.tv_sec + ei.usage.ru_stime.tv_sec,
           (long double)ei.usage.ru_stime.tv_usec / 1000000) +
