@@ -10,5 +10,6 @@ c)
     So the answer is `SIGKILL` (Sig #9 on Linux) and `SIGSTOP` (Sig #19 on Linux).
 
 d)
-    TODO: Need to figure out
+    'SIGCONT' is delivered (Sig #18 on Linux)
+    The signal 'SIGCONT' will be dilivered only when the process is stopped in the background. In this case, the background process is stopped because either the process is trying to read from terminal in the background, in which case a 'SIGTTIN' is sent to stop the process, or trying to print something from background to the terminal that the terminal configuration does not allow, for example, terminal setting changes, in which case a 'SIGTTOU' is sent to stop the process,.
 
