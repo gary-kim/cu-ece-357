@@ -22,7 +22,7 @@ int main(int argc, char** argv){
     struct sigaction sa;
     sa.sa_handler=signal_handler;
     sigemptyset(&sa.sa_mask);
-    sa.sa_flags=SA_RESTART; // Change this to 0 for part (c) sigaction(SIGUSR1,&sa,0);
+    sa.sa_flags=SA_RESTART;
     int signal;
     int n;
 
@@ -35,7 +35,7 @@ int main(int argc, char** argv){
     signal = (int)strtol(argv[1], NULL, 10);
     n = (int)strtol(argv[2], NULL, 10);
     if(sigaction(signal, &sa, 0)==-1){
-        fprintf(stderr, "error in sigaction: %s", strerror(errno));
+        fprintf(stderr, "error in sigaction: %s\n", strerror(errno));
         return -1;
     }
     create_processes(n, signal);
@@ -55,6 +55,7 @@ void create_processes(int n, int sig){
         switch(child){
             case -1:
                 fprintf(stderr, "error forking process: %s\n", strerror(errno));
+                exit(1);
                 break;
             case 0: 
                 if(kill(pid, sig)==-1){
@@ -69,7 +70,16 @@ void create_processes(int n, int sig){
     }
     for(int i=0;i<n;i++){
         int wstatus;
-        waitpid(children[i],&wstatus,0);
-        //TODO error
+        if (waitpid(children[i],&wstatus,0) != children[i]) {
+          fprintf(stderr, "error: unexpected return waiting for child process: %s", strerror(wstatus));
+        }
+        if (WIFSIGNALED(wstatus)) {
+          fprintf(stderr, "error: a child process has been killed by signal %i (%s)", WTERMSIG(wstatus), strsignal(wstatus));
+          exit(1);
+        }
+        if (WEXITSTATUS(wstatus) != 0) {
+          fprintf(stderr, "error from a child process calling \"kill\": %s\n", strerror(WEXITSTATUS(wstatus)));
+          exit(1);
+        }
     }
 }
