@@ -39,6 +39,7 @@ int main(int argc, char *argv[]){
     }
 }
 
+// From hw1pr3 programming assignment
 int write_helper(int fd, const void* buf, size_t count) {
   for (size_t written = 0; written < count;) {
     ssize_t r = write(fd, buf + written, count - written);
