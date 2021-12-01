@@ -130,7 +130,7 @@ int test4() {
   memset(buf, 'A', FILE_LENGTH);
   write_helper(fd, buf, FILE_LENGTH);
   
-  char *map = mmap(NULL, PAGE_SIZE * 2, PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0);
+  char *map = mmap(NULL, FILE_LENGTH, PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0);
   if (map == MAP_FAILED) {
     fprintf(stderr, "ERROR: Failed to call mmap for temporary file: %s\n", strerror(errno));
     exit(255);
