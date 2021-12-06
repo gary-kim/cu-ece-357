@@ -7,3 +7,7 @@ A)
     Essentially, `what` got completely lost in the list and is no longer a part of the list. So from the perspective of the functions running the `ll_insert` function, one of the inserts simply did not work (i.e. did not insert the `what`).
 
 B)
+    See `partb.c`
+
+C)
+    See `partc.c`
