@@ -4,7 +4,7 @@
 
 #define _GNU_SOURCE
 
-#include "spinlock_test.h"
+#include "test.h"
 
 #include <errno.h>
 #include <stdio.h>
@@ -15,6 +15,7 @@
 #include <unistd.h>
 
 #include "spinlock.h"
+#include "sem.h"
 
 #define N_PROC 64
 #define INCREMENT_TIMES 2048
@@ -90,11 +91,11 @@ void err(int code, const char *where, int err) {
 
 void child() {
   for (int i = 0; i < INCREMENT_TIMES; i++) {
-#ifdef USE_LOCK
+#ifdef USE_SPINLOCK
     spin_lock(&m->lock);
 #endif
     m->important_number += 1;
-#ifdef USE_LOCK
+#ifdef USE_SPINLOCK
     spin_unlock(&m->lock);
 #endif
   }

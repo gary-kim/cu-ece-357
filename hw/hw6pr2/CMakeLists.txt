@@ -2,11 +2,16 @@ cmake_minimum_required(VERSION 3.0.0)
 project(hw6pr2 C ASM)
 
 set(CMAKE_C_FLAGS ${CMAKE_C_FLAGS} "--std=gnu11")
-set(HEADER_FILES ${CMAKE_CURRENT_LIST_DIR}/spinlock.h ${CMAKE_CURRENT_LIST_DIR}/3rdparty/tas.h)
+set(SOURCE_FILES test.c locks/spinlock.c locks/sem.c 3rdparty/tas.S)
+set(INCLUDE_DIRS ${CMAKE_CURRENT_LIST_DIR} ${CMAKE_CURRENT_LIST_DIR}/3rdparty ${CMAKE_CURRENT_LIST_DIR}/locks)
 
-add_executable(spinlock spinlock_test.c spinlock.c 3rdparty/tas.S)
-target_compile_definitions(spinlock PRIVATE USE_LOCK)
-target_include_directories(spinlock PRIVATE ${CMAKE_CURRENT_LIST_DIR} ${CMAKE_CURRENT_LIST_DIR}/3rdparty)
+add_executable(test_nolock ${SOURCE_FILES})
+target_include_directories(test_nolock PRIVATE ${INCLUDE_DIRS})
 
-add_executable(spinlock_nolock spinlock_test.c spinlock.c 3rdparty/tas.S)
-target_include_directories(spinlock_nolock PRIVATE ${CMAKE_CURRENT_LIST_DIR} ${CMAKE_CURRENT_LIST_DIR}/3rdparty)
+add_executable(spinlock ${SOURCE_FILES})
+target_compile_definitions(spinlock PRIVATE USE_SPINLOCK)
+target_include_directories(spinlock PRIVATE ${INCLUDE_DIRS})
+
+add_executable(semaphore ${SOURCE_FILES})
+target_compile_definitions(semaphore PRIVATE USE_SEM)
+target_include_directories(semaphore PRIVATE ${INCLUDE_DIRS})
