@@ -1,13 +1,14 @@
-	.text				#See tas.S (32-bit version) for
-.globl tas				#other comments
-	.type	tas,@function
-tas:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	$1, %rax
-	lock;xchgb	%al,(%rdi)	#arg1 is in the rdi register
-	movsbq	%al,%rax		#sign-extend result into rax
-	pop	%rbp
-	ret				#rax contains the return value
+	.text				#Declare we are in text region
+.globl tas				#Declare tas to be a global symbol
+	.type	tas,@function		#Declare tas to be a function-type
+tas:					#Label marking start of tas function
+	pushl	%ebp			#Save base pointer on stack
+	movl	%esp, %ebp		#Establish new base pointer
+	movl	8(%ebp), %edx		#Fetch arg#1 to edx
+	movl	$1, %eax		#Prepare a constant 1
+	lock;xchgb	%al,(%edx)	#The actual atomic instruction
+	movsbl	%al,%eax		#Sign-extend char to an int
+	popl	%ebp			#Restore base pointer
+	ret				#Return (retval in eax)
 .Lfe1:
-	.size	tas,.Lfe1-tas
+	.size	tas,.Lfe1-tas		#Declare the size of function tas

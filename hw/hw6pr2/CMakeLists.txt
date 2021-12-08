@@ -2,7 +2,13 @@ cmake_minimum_required(VERSION 3.0.0)
 project(hw6pr2 C ASM)
 
 set(CMAKE_C_FLAGS ${CMAKE_C_FLAGS} "--std=gnu11")
-set(SOURCE_FILES test.c locks/spinlock.c locks/sem.c 3rdparty/tas.S)
+set(SOURCE_FILES test.c locks/spinlock.c locks/sem.c)
+if(CMAKE_SIZEOF_VOID_P EQUAL 8)
+    set(SOURCE_FILES ${SOURCE_FILES} 3rdparty/tas64.S)
+elseif(CMAKE_SIZEOF_VOID_P EQUAL 4)
+    set(SOURCE_FILES ${SOURCE_FILES} 3rdparty/tas.S)
+endif()
+
 set(INCLUDE_DIRS ${CMAKE_CURRENT_LIST_DIR} ${CMAKE_CURRENT_LIST_DIR}/3rdparty ${CMAKE_CURRENT_LIST_DIR}/locks)
 
 add_executable(test_nolock ${SOURCE_FILES})

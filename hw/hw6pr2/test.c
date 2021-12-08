@@ -35,31 +35,38 @@ int main(int argc, char **argv) {
   if (m == MAP_FAILED) {
     err(1, "getting a shared map region", errno);
   }
-  int procs[N_PROC];
+  int *procs = mmap(NULL, sizeof(int) * N_PROC, PROT_READ|PROT_WRITE, MAP_SHARED|MAP_ANONYMOUS, 0, 0);
+  if (m == MAP_FAILED) {
+    err(1, "getting a shared map region for procs array", errno);
+  }
+
+  struct sem s;
+#ifdef USE_SEM
+  s.count = N_PROC;
+  s.procs = procs;
+  sem_init(&s, 1);
+#endif
 
   // Fork into processes
   for (int i = 0; i < N_PROC; i++) {
-    procs[i] = fork();
-    switch (procs[i]) {
-      case -1:
-        err(1, "forking child processes", errno);
-        break;
-      case 0:
-        // I am child
-        my_procnum = i;
-        child();
-        break;
-      default:
-        // I am parent
-        break;
+    int n = fork();
+    if (n == -1) {
+      err(1, "forking child processes", errno);
     }
+    if (n == 0) {
+      procs[i] = getpid();
+      my_procnum = i;
+      child(&s);
+      exit(0);
+    }
+    procs[i] = n;
   }
 
   // Wait until all processes return
   for (int i = 0; i < N_PROC; i++) {
     int wstatus;
     if (waitpid(procs[i], &wstatus, 0) != procs[i]) {
-      err(1, "unexpected return waiting for child process", wstatus);
+      err(1, "unexpected return waiting for child process", errno);
     }
     if (WIFSIGNALED(wstatus)) {
       fprintf(stderr,
@@ -89,14 +96,22 @@ void err(int code, const char *where, int err) {
   exit(code);
 }
 
-void child() {
+void child(struct sem *s) {
   for (int i = 0; i < INCREMENT_TIMES; i++) {
 #ifdef USE_SPINLOCK
     spin_lock(&m->lock);
 #endif
+#ifdef USE_SEM
+    s->proc_num = my_procnum;
+    sem_wait(s);
+#endif
     m->important_number += 1;
+    //printf("Value is %i\n", m->important_number);
 #ifdef USE_SPINLOCK
     spin_unlock(&m->lock);
+#endif
+#ifdef USE_SEM
+    sem_inc(s);
 #endif
   }
   exit(0);
