@@ -1,11 +1,11 @@
 struct ll {
     struct ll *fwd;
-    int spinlock;
+    char spinlock;
     /* and other stuff  */
 }
 
 void ll_insert(struct ll *where, struct ll *what) {
-    while (TAS(where->spinlock) != 0);
+    while (TAS(&where->spinlock) != 0);
 
     what->fwd = where->fwd;
     where->fwd = what;
