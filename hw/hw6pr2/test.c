@@ -97,16 +97,15 @@ void err(int code, const char *where, int err) {
 }
 
 void child(struct sem *s) {
+  s->proc_num = my_procnum;
   for (int i = 0; i < INCREMENT_TIMES; i++) {
 #ifdef USE_SPINLOCK
     spin_lock(&m->lock);
 #endif
 #ifdef USE_SEM
-    s->proc_num = my_procnum;
     sem_wait(s);
 #endif
     m->important_number += 1;
-    //printf("Value is %i\n", m->important_number);
 #ifdef USE_SPINLOCK
     spin_unlock(&m->lock);
 #endif
