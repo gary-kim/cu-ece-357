@@ -5,7 +5,7 @@ struct ll {
 
 void ll_insert(struct ll *where, struct ll *what) {
     sigset_t nmask, omask;
-    sigset_fill(&nmask);
+    sigfillset(&nmask);
     sigprocmask(SIG_BLOCK, &nmask, &omask);
 
     what->fwd = where->fwd;
