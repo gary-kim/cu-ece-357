@@ -6,7 +6,7 @@
 
 #include "spinlock.h"
 
-#include "3rdparty/tas.h"
+#include "tas.h"
 
 void spin_lock(volatile char *lock_state) {
   while (tas(lock_state) != 0)
