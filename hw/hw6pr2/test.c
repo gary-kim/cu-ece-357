@@ -17,10 +17,10 @@
 #include "spinlock.h"
 #include "sem.h"
 
-#define N_PROC 64
+#define CUPS 64
 #define INCREMENT_TIMES 2048
 
-int my_procnum = -1;
+int my_proc_num = -1;
 struct info {
   char lock;
   int important_number;
@@ -35,27 +35,27 @@ int main(int argc, char **argv) {
   if (m == MAP_FAILED) {
     err(1, "getting a shared map region", errno);
   }
-  int *procs = mmap(NULL, sizeof(int) * N_PROC, PROT_READ|PROT_WRITE, MAP_SHARED|MAP_ANONYMOUS, 0, 0);
-  if (m == MAP_FAILED) {
+  int *procs = mmap(NULL, sizeof(int) * CUPS, PROT_READ|PROT_WRITE, MAP_SHARED|MAP_ANONYMOUS, 0, 0);
+  if (procs == MAP_FAILED) {
     err(1, "getting a shared map region for procs array", errno);
   }
 
   struct sem s;
 #ifdef USE_SEM
-  s.count = N_PROC;
+  s.count = CUPS;
   s.procs = procs;
   sem_init(&s, 1);
 #endif
 
   // Fork into processes
-  for (int i = 0; i < N_PROC; i++) {
+  for (int i = 0; i < CUPS; i++) {
     int n = fork();
     if (n == -1) {
       err(1, "forking child processes", errno);
     }
     if (n == 0) {
       procs[i] = getpid();
-      my_procnum = i;
+      my_proc_num = i;
       child(&s);
       exit(0);
     }
@@ -63,7 +63,7 @@ int main(int argc, char **argv) {
   }
 
   // Wait until all processes return
-  for (int i = 0; i < N_PROC; i++) {
+  for (int i = 0; i < CUPS; i++) {
     int wstatus;
     if (waitpid(procs[i], &wstatus, 0) != procs[i]) {
       err(1, "unexpected return waiting for child process", errno);
@@ -81,13 +81,13 @@ int main(int argc, char **argv) {
     }
   }
 
-  if (m->important_number == N_PROC * INCREMENT_TIMES) {
+  if (m->important_number == CUPS * INCREMENT_TIMES) {
     printf("The value of important_number is %i as it should be\n",
            m->important_number);
     return 0;
   }
   printf("The value of important_number is %i but it should be %i\n",
-         m->important_number, N_PROC * INCREMENT_TIMES);
+         m->important_number, CUPS * INCREMENT_TIMES);
   return -1;
 }
 
@@ -97,7 +97,7 @@ void err(int code, const char *where, int err) {
 }
 
 void child(struct sem *s) {
-  s->proc_num = my_procnum;
+  s->proc_num = my_proc_num;
   for (int i = 0; i < INCREMENT_TIMES; i++) {
 #ifdef USE_SPINLOCK
     spin_lock(&m->lock);
