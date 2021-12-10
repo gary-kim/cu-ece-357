@@ -7,8 +7,6 @@
 
 void spin_lock(volatile char *lock_state);
 
-int spin_try(volatile char *lock_state);
-
 void spin_unlock(volatile char *lock_state);
 
 #endif //HW6PR2_SPINLOCK_H

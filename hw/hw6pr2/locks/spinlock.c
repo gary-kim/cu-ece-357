@@ -13,10 +13,6 @@ void spin_lock(volatile char *lock_state) {
     ;
 }
 
-int spin_try(volatile char* lock_state) {
-  return tas(lock_state);
-}
-
 void spin_unlock(volatile char *lock_state) { *lock_state = 0; }
 
 #endif

@@ -72,7 +72,6 @@ int main(int argc, char **argv) {
   for (int i = 0; i < s_num; i++) {
     s[i].count = config_num;
     s[i].procs = procs;
-    s[i].semnum = i;
     sem_init(&s[i], SHELLS_IN_CUP);
   }
 

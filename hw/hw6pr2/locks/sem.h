@@ -8,7 +8,6 @@
 struct sem {
   int proc_num;
   int count;
-  int semnum;
   int *procs;
   char *locks_lock;
   unsigned int *locks;

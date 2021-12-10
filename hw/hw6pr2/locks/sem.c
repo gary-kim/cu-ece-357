@@ -84,7 +84,17 @@ int sem_try(struct sem *s) {
 }
 
 void sem_wait(struct sem *s) {
-  while (sem_try(s) == 0) {
+  while (1 == 1) {
+    spin_lock(s->locks_lock);
+    spin_lock(s->waiting_procs_lock);
+
+    if ((*s->locks) > 0) {
+      (*s->locks)--;
+      spin_unlock(s->waiting_procs_lock);
+      spin_unlock(s->locks_lock);
+      return;
+    }
+
     sigset_t mask, suspend_mask;
     sigemptyset(&mask);
     sigemptyset(&suspend_mask);
@@ -94,9 +104,9 @@ void sem_wait(struct sem *s) {
     // Record going to sleep
     s->sleep_procs[s->proc_num]++;
 
-    spin_lock(s->waiting_procs_lock);
     set_bit(s->waiting_procs, s->proc_num, 1);
     spin_unlock(s->waiting_procs_lock);
+    spin_unlock(s->locks_lock);
     sigsuspend(&suspend_mask);
 
     // Record being awoken
