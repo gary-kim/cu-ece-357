@@ -17,7 +17,7 @@
 #include "spinlock.h"
 #include "sem.h"
 
-#define CUPS 64
+#define NUM_OF_CHILDREN 64
 #define INCREMENT_TIMES 2048
 
 int my_proc_num = -1;
@@ -35,20 +35,20 @@ int main(int argc, char **argv) {
   if (m == MAP_FAILED) {
     err(1, "getting a shared map region", errno);
   }
-  int *procs = mmap(NULL, sizeof(int) * CUPS, PROT_READ|PROT_WRITE, MAP_SHARED|MAP_ANONYMOUS, 0, 0);
+  int *procs = mmap(NULL, sizeof(int) * NUM_OF_CHILDREN, PROT_READ|PROT_WRITE, MAP_SHARED|MAP_ANONYMOUS, 0, 0);
   if (procs == MAP_FAILED) {
     err(1, "getting a shared map region for procs array", errno);
   }
 
   struct sem s;
 #ifdef USE_SEM
-  s.count = CUPS;
+  s.count = NUM_OF_CHILDREN;
   s.procs = procs;
   sem_init(&s, 1);
 #endif
 
   // Fork into processes
-  for (int i = 0; i < CUPS; i++) {
+  for (int i = 0; i < NUM_OF_CHILDREN; i++) {
     int n = fork();
     if (n == -1) {
       err(1, "forking child processes", errno);
@@ -63,7 +63,7 @@ int main(int argc, char **argv) {
   }
 
   // Wait until all processes return
-  for (int i = 0; i < CUPS; i++) {
+  for (int i = 0; i < NUM_OF_CHILDREN; i++) {
     int wstatus;
     if (waitpid(procs[i], &wstatus, 0) != procs[i]) {
       err(1, "unexpected return waiting for child process", errno);
@@ -81,13 +81,13 @@ int main(int argc, char **argv) {
     }
   }
 
-  if (m->important_number == CUPS * INCREMENT_TIMES) {
+  if (m->important_number == NUM_OF_CHILDREN * INCREMENT_TIMES) {
     printf("The value of important_number is %i as it should be\n",
            m->important_number);
     return 0;
   }
   printf("The value of important_number is %i but it should be %i\n",
-         m->important_number, CUPS * INCREMENT_TIMES);
+         m->important_number, NUM_OF_CHILDREN * INCREMENT_TIMES);
   return -1;
 }
 
