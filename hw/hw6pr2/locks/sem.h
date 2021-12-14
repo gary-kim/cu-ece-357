@@ -7,7 +7,7 @@
 
 struct sem {
   int proc_num;
-  int count;
+  int proc_count;
   int *procs;
   char *locks_lock;
   unsigned int *locks;

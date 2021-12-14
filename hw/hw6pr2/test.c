@@ -42,7 +42,7 @@ int main(int argc, char **argv) {
 
   struct sem s;
 #ifdef USE_SEM
-  s.count = NUM_OF_CHILDREN;
+  s.proc_count = NUM_OF_CHILDREN;
   s.procs = procs;
   sem_init(&s, 1);
 #endif

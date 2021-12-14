@@ -46,7 +46,7 @@ int get_bit(const unsigned char *procs, unsigned int index) {
 }
 
 void sem_init(struct sem *s, int count) {
-  unsigned int c = s->count;
+  unsigned int c = s->proc_count;
   unsigned int size_of_waiting_procs = (c >> 3) + (((c & 0x7) == 0x0) ? 0 : 1);
   unsigned int size_of_sleep_procs = c * sizeof(unsigned int);
   unsigned int size_of_wake_procs = c * sizeof(unsigned int);
@@ -121,7 +121,7 @@ void sem_inc(struct sem *s) {
   (*s->locks)++;
   spin_unlock(s->locks_lock);
   spin_lock(s->waiting_procs_lock);
-  for (int i = 0; i < s->count; i++) {
+  for (int i = 0; i < s->proc_count; i++) {
     if (get_bit(s->waiting_procs, i) && i != s->proc_num) {
       set_bit(s->waiting_procs, i, 0);
       kill(s->procs[i], SIGUSR1);
@@ -135,7 +135,7 @@ int sem_signal_count() {
 };
 
 void print_info(struct sem *s) {
-  for (int i = 0; i < s->count; i++) {
+  for (int i = 0; i < s->proc_count; i++) {
     fprintf(stderr," VCPU %-4i         %9i %9i\n", i, s->sleep_procs[i], s->wake_procs[i]);
   }
 }
