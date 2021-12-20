@@ -1,0 +1,41 @@
+Script started on 2021-12-20 16:15:10-05:00 [TERM="xterm-256color" TTY="/dev/pts/3" COLUMNS="152" LINES="41"]
+]777;notify;Command completed;exit\]777;precmd\]0;gary@s76l:~/tmp/git/cu-ece-357/hw/hw7\]7;file://s76l.garykim.dev/home/gary/tmp/git/cu-ece-357/hw/hw7\[?2004h[gary@s76l hw7]$ make
+[?2004l]777;preexec\as --64 -o asmcat.o asmcat.S
+ld -o asmcat asmcat.o
+]777;notify;Command completed;make\]777;precmd\]0;gary@s76l:~/tmp/git/cu-ece-357/hw/hw7\]7;file://s76l.garykim.dev/home/gary/tmp/git/cu-ece-357/hw/hw7\[?2004h[gary@s76l hw7]$ strace ./asmcat < /tmp/main.tex > /dev/null
+[?2004l]777;preexec\execve("./asmcat", ["./asmcat"], 0x7ffc40c44e60 /* 80 vars */) = 0
+read(0, "\\documentclass[12pt]{article}\n\n\\"..., 4096) = 4096
+write(1, "\\documentclass[12pt]{article}\n\n\\"..., 4096) = 4096
+read(0, "lsius can be measured using gas "..., 4096) = 4096
+write(1, "lsius can be measured using gas "..., 4096) = 4096
+read(0, "ntegrated Value & Retention Time"..., 4096) = 4096
+write(1, "ntegrated Value & Retention Time"..., 4096) = 4096
+read(0, " & 0.443 & 0.710 & 4.797e-05  (1"..., 4096) = 4096
+write(1, " & 0.443 & 0.710 & 4.797e-05  (1"..., 4096) = 4096
+read(0, "te these values, 4mL, 6mL, 8mL, "..., 4096) = 4096
+write(1, "te these values, 4mL, 6mL, 8mL, "..., 4096) = 4096
+read(0, "lumn{4}{| c |}{8mL Run} & 0.0003"..., 4096) = 4096
+write(1, "lumn{4}{| c |}{8mL Run} & 0.0003"..., 4096) = 4096
+read(0, "ubsection{\\Acf{n2}}\n\n\\begin{figu"..., 4096) = 2365
+write(1, "ubsection{\\Acf{n2}}\n\n\\begin{figu"..., 2365) = 2365
+read(0, "", 4096)                       = 0
+exit(0)                                 = ?
++++ exited with 0 +++
+]777;notify;Command completed;strace ./asmcat < /tmp/main.tex > /dev/null\]777;precmd\]0;gary@s76l:~/tmp/git/cu-ece-357/hw/hw7\]7;file://s76l.garykim.dev/home/gary/tmp/git/cu-ece-357/hw/hw7\[?2004h[gary@s76l hw7]$ ./asmcat < [K[K[K[K[K[K[K[K[K[K[Kstrace .//as[K[K[Kasmcat < s[K/tmp/smallfile.txt
+[?2004l]777;preexec\execve("./asmcat", ["./asmcat"], 0x7ffc38da8aa0 /* 80 vars */) = 0
+read(0, "small file test\n", 4096)      = 16
+write(1, "small file test\n", 16small file test
+)       = 16
+read(0, "", 4096)                       = 0
+exit(0)                                 = ?
++++ exited with 0 +++
+]777;notify;Command completed;strace ./asmcat < /tmp/smallfile.txt\]777;precmd\]0;gary@s76l:~/tmp/git/cu-ece-357/hw/hw7\]7;file://s76l.garykim.dev/home/gary/tmp/git/cu-ece-357/hw/hw7\[?2004h[gary@s76l hw7]$ echo $?
+[?2004l]777;preexec\0
+]777;notify;Command completed;echo $?\]777;precmd\]0;gary@s76l:~/tmp/git/cu-ece-357/hw/hw7\]7;file://s76l.garykim.dev/home/gary/tmp/git/cu-ece-357/hw/hw7\[?2004h[gary@s76l hw7]$ ./asmcat < /tmp/smallfile.txt
+[?2004l]777;preexec\small file test
+]777;notify;Command completed;./asmcat < /tmp/smallfile.txt\]777;precmd\]0;gary@s76l:~/tmp/git/cu-ece-357/hw/hw7\]7;file://s76l.garykim.dev/home/gary/tmp/git/cu-ece-357/hw/hw7\[?2004h[gary@s76l hw7]$ echo $?
+[?2004l]777;preexec\0
+]777;notify;Command completed;echo $?\]777;precmd\]0;gary@s76l:~/tmp/git/cu-ece-357/hw/hw7\]7;file://s76l.garykim.dev/home/gary/tmp/git/cu-ece-357/hw/hw7\[?2004h[gary@s76l hw7]$ exit
+[?2004l]777;preexec\exit
+
+Script done on 2021-12-20 16:18:00-05:00 [COMMAND_EXIT_CODE="0"]
